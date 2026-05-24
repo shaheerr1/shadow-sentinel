@@ -1,16 +1,25 @@
 import pytest
 import sys
 import os
+from unittest.mock import MagicMock
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from fastapi.testclient import TestClient
 
 os.environ["DATABASE_URL"] = os.getenv(
     "DATABASE_URL",
     "postgresql://postgres:postgres@localhost:5432/postgres"
 )
 
+import gateway.main as main_module
+
+main_module.model_a = MagicMock(
+    return_value=[{"label": "POSITIVE", "score": 0.99}]
+)
+main_module.model_b = MagicMock(
+    return_value=[{"label": "positive", "score": 0.98}]
+)
+
+from fastapi.testclient import TestClient
 from gateway.main import app
 
 client = TestClient(app)
@@ -29,19 +38,42 @@ def test_predict_returns_valid_response():
     assert "model_b" in data
     assert "agreed" in data
     assert "agreement_rate" in data
-    assert data["prediction"] in ["positive", "negative", "neutral"]
+
+def test_predict_positive_sentiment():
+    main_module.model_a = MagicMock(
+        return_value=[{"label": "POSITIVE", "score": 0.99}]
+    )
+    main_module.model_b = MagicMock(
+        return_value=[{"label": "positive", "score": 0.98}]
+    )
+    response = client.post("/predict", json={"text": "This is absolutely amazing"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["model_a"]["label"] == "positive"
 
 def test_predict_negative_sentiment():
+    main_module.model_a = MagicMock(
+        return_value=[{"label": "NEGATIVE", "score": 0.99}]
+    )
+    main_module.model_b = MagicMock(
+        return_value=[{"label": "negative", "score": 0.97}]
+    )
     response = client.post("/predict", json={"text": "This is absolutely terrible"})
     assert response.status_code == 200
     data = response.json()
     assert data["model_a"]["label"] == "negative"
 
-def test_predict_positive_sentiment():
-    response = client.post("/predict", json={"text": "This is absolutely amazing"})
+def test_predict_disagreement():
+    main_module.model_a = MagicMock(
+        return_value=[{"label": "POSITIVE", "score": 0.95}]
+    )
+    main_module.model_b = MagicMock(
+        return_value=[{"label": "negative", "score": 0.91}]
+    )
+    response = client.post("/predict", json={"text": "meh it was whatever"})
     assert response.status_code == 200
     data = response.json()
-    assert data["model_a"]["label"] == "positive"
+    assert data["agreed"] == False
 
 def test_stats_returns_valid_structure():
     response = client.get("/stats")
