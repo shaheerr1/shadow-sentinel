@@ -2,17 +2,21 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies first (cached layer)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
+# Pre-download models at build time so startup is instant
+RUN python -c "\
+from transformers import pipeline; \
+pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english'); \
+pipeline('sentiment-analysis', model='siebert/sentiment-roberta-large-english'); \
+print('Models cached.')"
+
 COPY models/    ./models/
 COPY gateway/   ./gateway/
 COPY logger/    ./logger/
 COPY frontend/  ./frontend/
 
-# Directory for persistent data
 RUN mkdir -p /app/data
 
 EXPOSE 8000
