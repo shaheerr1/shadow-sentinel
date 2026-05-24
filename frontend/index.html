@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadow Sentinel</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --purple: #a371f7;
+      --green: #3fb950;
+      --red: #ff7b72;
+      --blue: #58a6ff;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+      font-size: 14px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo span { color: var(--purple); }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(63,185,80,0.12);
+      border: 1px solid rgba(63,185,80,0.25);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--green);
+      letter-spacing: 0.5px;
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(63,185,80,0.4); }
+      50% { opacity:.6; box-shadow: 0 0 0 5px rgba(63,185,80,0); }
+    }
+    .last-updated { font-size: 12px; color: var(--muted); }
+
+    /* Banner */
+    .banner {
+      padding: 11px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid;
+    }
+    .banner.danger { background: rgba(255,123,114,0.08); border-color: rgba(255,123,114,0.25); color: var(--red); }
+    .banner.success { background: rgba(63,185,80,0.08); border-color: rgba(63,185,80,0.25); color: var(--green); }
+    .banner.info { background: rgba(88,166,255,0.08); border-color: rgba(88,166,255,0.25); color: var(--blue); }
+
+    /* Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .metric-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .metric-value {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .metric-sub { font-size: 11px; color: var(--muted); }
+    .metric-value.danger { color: var(--red); }
+    .metric-value.success { color: var(--green); }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-pill.danger { background: rgba(255,123,114,0.12); color: var(--red); border: 1px solid rgba(255,123,114,0.25); }
+    .status-pill.success { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.25); }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .card-title { font-size: 13px; font-weight: 600; }
+    .card-sub { font-size: 11px; color: var(--muted); }
+
+    /* Chart */
+    .chart-wrap { position: relative; height: 210px; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead th {
+      text-align: left;
+      padding: 0 12px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid rgba(48,54,61,0.6); transition: background .1s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 10px 12px; }
+    .td-time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .td-input { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.pos { background: rgba(63,185,80,0.12); color: var(--green); }
+    .badge.neg { background: rgba(255,123,114,0.12); color: var(--red); }
+    .badge.neu { background: rgba(125,133,144,0.12); color: var(--muted); }
+    .badge.agree { background: rgba(63,185,80,0.12); color: var(--green); }
+    .badge.differ { background: rgba(255,123,114,0.12); color: var(--red); }
+    .score-text { color: var(--muted); font-size: 10px; margin-left: 4px; }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .footer a { color: var(--purple); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">🛡️ Shadow <span>Sentinel</span></div>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+  <div class="last-updated" id="last-updated">Connecting...</div>
+</div>
+
+<div class="banner info" id="banner">Loading monitoring data...</div>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label">Agreement Rate</div>
+    <div class="metric-value" id="agreement-rate">—</div>
+    <div class="metric-sub">Last 100 predictions</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Total Predictions</div>
+    <div class="metric-value" id="total" style="color:var(--text)">—</div>
+    <div class="metric-sub">All time</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Disagreements</div>
+    <div class="metric-value" id="disagreements" style="color:var(--text)">—</div>
+    <div class="metric-sub">Model A ≠ Model B</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-label">Model B Status</div>
+    <div style="margin-top:10px" id="model-b-status">
+      <span class="status-pill info" style="border-color:rgba(88,166,255,0.25);color:var(--blue);background:rgba(88,166,255,0.08)">Loading...</span>
+    </div>
+    <div class="metric-sub" style="margin-top:10px">Promotion decision</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Agreement Rate Over Time</div>
+    <div class="card-sub">Rolling 5-prediction average · red line = 80% threshold</div>
+  </div>
+  <div class="chart-wrap">
+    <canvas id="agreement-chart"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Recent Predictions</div>
+    <div class="card-sub">Last 15 requests</div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Input</th>
+        <th>Model A</th>
+        <th>Model B</th>
+        <th>Result</th>
+      </tr>
+    </thead>
+    <tbody id="predictions-table">
+      <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">
+  shadow-sentinel &nbsp;·&nbsp; auto-refreshes every 5s &nbsp;·&nbsp;
+  <a href="/docs">API docs →</a>
+</div>
+
+<script>
+let chart = null;
+
+function labelBadge(label, score) {
+  const cls = label === 'positive' ? 'pos' : label === 'negative' ? 'neg' : 'neu';
+  return `<span class="badge ${cls}">${label}</span><span class="score-text">${(score * 100).toFixed(0)}%</span>`;
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('predictions-table');
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">No predictions yet — send a request to POST /predict</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="td-time">${r.timestamp ? r.timestamp.split(' ')[1] : '—'}</td>
+      <td class="td-input" title="${r.input_text}">${r.input_text}</td>
+      <td>${labelBadge(r.model_a_label, r.model_a_score)}</td>
+      <td>${labelBadge(r.model_b_label, r.model_b_score)}</td>
+      <td><span class="badge ${r.agreed ? 'agree' : 'differ'}">${r.agreed ? '✓ agree' : '✗ differ'}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderChart(chartData) {
+  const labels = chartData.map(d => d.index);
+  const values = chartData.map(d => d.value);
+
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = values;
+    chart.data.datasets[1].data = labels.map(() => 80);
+    chart.update('none');
+    return;
+  }
+
+  const ctx = document.getElementById('agreement-chart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Agreement rate',
+          data: values,
+          borderColor: '#a371f7',
+          backgroundColor: 'rgba(163,113,247,0.07)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3.5,
+          pointBackgroundColor: '#a371f7',
+          pointBorderColor: '#161b22',
+          pointBorderWidth: 1.5,
+          pointHoverRadius: 5,
+        },
+        {
+          label: '80% threshold',
+          data: labels.map(() => 80),
+          borderColor: 'rgba(255,123,114,0.5)',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(48,54,61,0.7)' },
+          ticks: { color: '#7d8590', callback: v => v + '%', font: { size: 11 } },
+          border: { display: false }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#7d8590', font: { size: 11 }, maxTicksLimit: 10 },
+          border: { display: false }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2128',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          titleColor: '#e6edf3',
+          bodyColor: '#7d8590',
+          padding: 10,
+          callbacks: {
+            label: ctx => ctx.datasetIndex === 0
+              ? `  Agreement: ${ctx.parsed.y.toFixed(1)}%`
+              : `  Threshold: 80%`
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateDashboard(data) {
+  const rate = data.agreement_rate;
+
+  const rateEl = document.getElementById('agreement-rate');
+  rateEl.textContent = rate + '%';
+  rateEl.className = 'metric-value ' + (rate >= 80 ? 'success' : 'danger');
+
+  document.getElementById('total').textContent = data.total;
+  document.getElementById('disagreements').textContent = data.disagreements;
+
+  const banner = document.getElementById('banner');
+  if (data.total === 0) {
+    banner.className = 'banner info';
+    banner.textContent = 'ℹ️  No predictions yet. Send requests to POST /predict to start monitoring.';
+  } else if (rate < 80) {
+    banner.className = 'banner danger';
+    banner.innerHTML = `⚠️  Divergence alert — <strong>${rate}%</strong> agreement. Model B is unstable. Rollback recommended.`;
+  } else {
+    banner.className = 'banner success';
+    banner.innerHTML = `✅  Models are stable — <strong>${rate}%</strong> agreement. Model B is eligible for promotion.`;
+  }
+
+  document.getElementById('model-b-status').innerHTML = rate >= 80
+    ? `<span class="status-pill success">✓ Promotable</span>`
+    : `<span class="status-pill danger">⚠ Unstable</span>`;
+
+  renderChart(data.chart_data);
+  renderTable(data.recent);
+
+  document.getElementById('last-updated').textContent =
+    'Updated ' + new Date().toLocaleTimeString();
+}
+
+async function fetchStats() {
+  try {
+    const res = await fetch('/stats');
+    if (!res.ok) throw new Error();
+    updateDashboard(await res.json());
+  } catch {
+    document.getElementById('last-updated').textContent = '⚠ Connection error';
+  }
+}
+
+fetchStats();
+setInterval(fetchStats, 5000);
+</script>
+</body>
+</html

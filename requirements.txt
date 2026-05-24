@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+transformers
+torch
+streamlit
+pandas
+python-dotenv
+httpx
