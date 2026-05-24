@@ -9,6 +9,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.model_loader import load_models
 from logger.db import init_db, log_prediction, get_agreement_rate
 
+# ── CHANGE 1: read DB path from environment variable ──────
+DB_PATH = os.getenv("DB_PATH", "shadow_sentinel.db")
+
 app = FastAPI(title="Shadow Sentinel")
 
 app.add_middleware(
@@ -36,7 +39,6 @@ def generate_diagnosis(df):
 
     issues = []
 
-    # Critical: both models confident but opposite labels
     high_conf = disagreements[
         (disagreements["model_a_score"] > 0.8) &
         (disagreements["model_b_score"] > 0.8)
@@ -48,7 +50,6 @@ def generate_diagnosis(df):
             "detail": "Both models are highly confident but reach opposite conclusions. This is not random noise — it signals Model B has learned a fundamentally different decision boundary. In production, this would silently serve wrong predictions with high confidence, which is the most dangerous failure mode."
         })
 
-    # Warning: informal or slang language
     slang_words = ["ngl", "lol", "slaps", "meh", "lowkey", "idk", "tbh", "imo",
                    "bruh", "mid", "fire", "trash", "lit", "cap", "bussin"]
     informal_fails = disagreements[
@@ -63,7 +64,6 @@ def generate_diagnosis(df):
             "detail": "Model B misclassifies informal or slang-heavy text. Real users communicate this way constantly. This is a distribution shift problem — the model was not exposed to the actual language patterns present in production traffic."
         })
 
-    # Warning: short ambiguous inputs
     short_fails = disagreements[disagreements["input_text"].str.split().str.len() <= 5]
     already_counted = set(informal_fails.index)
     new_short = short_fails[~short_fails.index.isin(already_counted)]
@@ -74,11 +74,9 @@ def generate_diagnosis(df):
             "detail": "Model B struggles with short, context-sparse inputs. It may be over-relying on surface patterns that break down when there is minimal text to analyse — a common failure mode for models trained on longer content."
         })
 
-    # Confidence gap
     conf_gap = (disagreements["model_a_score"] - disagreements["model_b_score"]).abs().mean()
     conf_gap = float(conf_gap) if not pd.isna(conf_gap) else 0.0
 
-    # Recommendation based on agreement rate and issue severity
     rate = df["agreed"].mean() * 100
     has_critical = any(i["severity"] == "critical" for i in issues)
 
@@ -125,7 +123,8 @@ def predict(req: PredictRequest):
 @app.get("/stats")
 def stats():
     init_db()
-    conn = sqlite3.connect("shadow_sentinel.db")
+    # ── CHANGE 2: use DB_PATH instead of hardcoded string ──
+    conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query("SELECT * FROM predictions ORDER BY timestamp ASC", conn)
     conn.close()
 
