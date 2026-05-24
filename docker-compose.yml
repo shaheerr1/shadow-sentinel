@@ -7,10 +7,8 @@ services:
       - "8000:8000"
     volumes:
       - hf_cache:/root/.cache/huggingface
-      - sqlite_data:/app/data
     environment:
-      - DB_PATH=/app/data/shadow_sentinel.db
+      - DATABASE_URL=${DATABASE_URL}
 
 volumes:
   hf_cache:
-  sqlite_data:

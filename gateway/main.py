@@ -2,15 +2,18 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import sys, os, sqlite3
+import sys, os
 import pandas as pd
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.model_loader import load_models
 from logger.db import init_db, log_prediction, get_agreement_rate
 
-# ── CHANGE 1: read DB path from environment variable ──────
-DB_PATH = os.getenv("DB_PATH", "shadow_sentinel.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI(title="Shadow Sentinel")
 
@@ -123,16 +126,21 @@ def predict(req: PredictRequest):
 @app.get("/stats")
 def stats():
     init_db()
-    # ── CHANGE 2: use DB_PATH instead of hardcoded string ──
-    conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query("SELECT * FROM predictions ORDER BY timestamp ASC", conn)
+    conn = psycopg2.connect(DATABASE_URL)
+    df = pd.read_sql_query(
+        "SELECT * FROM predictions ORDER BY timestamp ASC",
+        conn
+    )
     conn.close()
 
     if df.empty:
         return {
             "agreement_rate": 0, "total": 0, "disagreements": 0,
             "model_b_status": "no_data", "chart_data": [], "recent": [],
-            "diagnosis": {"issues": [], "recommendation": "No data yet.", "high_conf_conflicts": 0, "avg_confidence_gap": 0}
+            "diagnosis": {
+                "issues": [], "recommendation": "No data yet.",
+                "high_conf_conflicts": 0, "avg_confidence_gap": 0
+            }
         }
 
     df["rolling"] = df["agreed"].rolling(5, min_periods=1).mean() * 100
@@ -145,12 +153,13 @@ def stats():
 
     rate = round(df.tail(100)["agreed"].mean() * 100, 1)
     diagnosis = generate_diagnosis(df.tail(100))
+    has_critical = diagnosis.get("high_conf_conflicts", 0) > 0
 
     return {
         "agreement_rate": rate,
         "total": len(df),
         "disagreements": int((df["agreed"] == 0).sum()),
-        "model_b_status": "promotable" if rate >= 80 else "unstable",
+        "model_b_status": "promotable" if (rate >= 80 and not has_critical) else "unstable",
         "chart_data": chart_data,
         "recent": recent_list,
         "diagnosis": diagnosis

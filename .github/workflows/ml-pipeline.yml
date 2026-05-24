@@ -1,0 +1,66 @@
+name: ML Pipeline — CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: CI — Test and Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TRANSFORMERS_OFFLINE: "0"
+        run: pytest tests/ -v
+
+  shadow-check:
+    name: CD — Shadow Deployment Check
+    runs-on: ubuntu-latest
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Run shadow deployment check
+        env:
+          DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+          AGREEMENT_THRESHOLD: "80.0"
+        run: python scripts/shadow_check.py
+
+      - name: Promote Model B
+        if: success()
+        run: |
+          echo "✅ Model B promoted — agreement rate above threshold with no critical conflicts"
+          echo "PROMOTED=true" >> $GITHUB_ENV
+
+      - name: Rollback Model B
+        if: failure()
+        run: |
+          echo "🚨 Rollback triggered — Model B failed shadow deployment check"
+          echo "PROMOTED=false" >> $GITHUB_ENV

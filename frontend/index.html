@@ -1,696 +1,880 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shadow Sentinel</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shadow Sentinel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    :root {
-      --bg:        #080b10;
-      --bg1:       #0c1018;
-      --bg2:       #111520;
-      --bg3:       #161b28;
-      --border:    rgba(255,255,255,0.07);
-      --border2:   rgba(255,255,255,0.04);
-      --text:      #dce4f0;
-      --text2:     #8a95a8;
-      --text3:     #4e5a6a;
-      --accent:    #4f8fff;
-      --accent-dim: rgba(79,143,255,0.12);
-      --green:     #3ecf8e;
-      --green-dim: rgba(62,207,142,0.1);
-      --red:       #f16060;
-      --red-dim:   rgba(241,96,96,0.1);
-      --amber:     #e8a84c;
-      --amber-dim: rgba(232,168,76,0.1);
-      --purple:    #9b87f5;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
-    }
+      :root {
+        --bg: #080b10;
+        --bg1: #0c1018;
+        --bg2: #111520;
+        --bg3: #161b28;
+        --border: rgba(255, 255, 255, 0.07);
+        --border2: rgba(255, 255, 255, 0.04);
+        --text: #dce4f0;
+        --text2: #8a95a8;
+        --text3: #4e5a6a;
+        --accent: #4f8fff;
+        --accent-dim: rgba(79, 143, 255, 0.12);
+        --green: #3ecf8e;
+        --green-dim: rgba(62, 207, 142, 0.1);
+        --red: #f16060;
+        --red-dim: rgba(241, 96, 96, 0.1);
+        --amber: #e8a84c;
+        --amber-dim: rgba(232, 168, 76, 0.1);
+        --purple: #9b87f5;
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "IBM Plex Sans", sans-serif;
+      }
 
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 13px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 13px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
 
-    /* ── LAYOUT ─────────────────────────────────────────── */
-    #root {
-      width: 100%; height: 100dvh;
-      display: grid;
-      grid-template-rows: 44px 1fr;
-      overflow: hidden;
-    }
+      /* ── LAYOUT ─────────────────────────────────────────── */
+      #root {
+        width: 100%;
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: 44px 1fr;
+        overflow: hidden;
+      }
 
-    /* ── TOPBAR ─────────────────────────────────────────── */
-    #topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg1);
-      flex-shrink: 0;
-      gap: 16px;
-    }
+      /* ── TOPBAR ─────────────────────────────────────────── */
+      #topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg1);
+        flex-shrink: 0;
+        gap: 16px;
+      }
 
-    .topbar-left { display: flex; align-items: center; gap: 14px; }
+      .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
 
-    .wordmark {
-      font-family: var(--mono);
-      font-weight: 600;
-      font-size: 13px;
-      letter-spacing: 0.04em;
-      color: var(--text);
-      display: flex; align-items: center; gap: 8px;
-    }
-    .wordmark-icon {
-      width: 22px; height: 22px;
-      background: var(--accent-dim);
-      border: 1px solid rgba(79,143,255,0.25);
-      border-radius: 5px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px;
-    }
-    .wordmark span { color: var(--accent); }
+      .wordmark {
+        font-family: var(--mono);
+        font-weight: 600;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .wordmark-icon {
+        width: 22px;
+        height: 22px;
+        background: var(--accent-dim);
+        border: 1px solid rgba(79, 143, 255, 0.25);
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+      }
+      .wordmark span {
+        color: var(--accent);
+      }
 
-    .divider-v {
-      width: 1px; height: 16px;
-      background: var(--border);
-    }
+      .divider-v {
+        width: 1px;
+        height: 16px;
+        background: var(--border);
+      }
 
-    .pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 2px 9px;
-      border-radius: 20px;
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-    }
-    .pill-live {
-      background: var(--green-dim);
-      border: 1px solid rgba(62,207,142,0.2);
-      color: var(--green);
-    }
-    .pill-live .dot {
-      width: 5px; height: 5px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: blink 2s ease-in-out infinite;
-    }
-    @keyframes blink {
-      0%,100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 9px;
+        border-radius: 20px;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+      }
+      .pill-live {
+        background: var(--green-dim);
+        border: 1px solid rgba(62, 207, 142, 0.2);
+        color: var(--green);
+      }
+      .pill-live .dot {
+        width: 5px;
+        height: 5px;
+        background: var(--green);
+        border-radius: 50%;
+        animation: blink 2s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
 
-    .topbar-right {
-      display: flex; align-items: center; gap: 16px;
-      margin-left: auto;
-    }
-    #last-updated {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-      letter-spacing: 0.03em;
-    }
-    .api-link {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-      text-decoration: none;
-      letter-spacing: 0.03em;
-      transition: color 0.15s;
-    }
-    .api-link:hover { color: var(--accent); }
+      .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-left: auto;
+      }
+      #last-updated {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 0.03em;
+      }
+      .api-link {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+        text-decoration: none;
+        letter-spacing: 0.03em;
+        transition: color 0.15s;
+      }
+      .api-link:hover {
+        color: var(--accent);
+      }
 
-    /* ── MAIN ───────────────────────────────────────────── */
-    #main {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      grid-template-rows: 1fr;
-      gap: 0;
-      overflow: hidden;
-      height: 100%;
-    }
+      /* ── MAIN ───────────────────────────────────────────── */
+      #main {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        grid-template-rows: 1fr;
+        gap: 0;
+        overflow: hidden;
+        height: 100%;
+      }
 
-    /* ── LEFT SIDEBAR ───────────────────────────────────── */
-    #sidebar {
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--border);
-      background: var(--bg1);
-      overflow: hidden;
-      gap: 0;
-    }
+      /* ── LEFT SIDEBAR ───────────────────────────────────── */
+      #sidebar {
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border);
+        background: var(--bg1);
+        overflow: hidden;
+        gap: 0;
+      }
 
-    .sidebar-section {
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .sidebar-section:last-child { border-bottom: none; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+      .sidebar-section {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar-section:last-child {
+        border-bottom: none;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
 
-    .section-label {
-      font-family: var(--mono);
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 12px;
-    }
+      .section-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text3);
+        margin-bottom: 12px;
+      }
 
-    /* Agreement rate big display */
-    .rate-display {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .rate-value {
-      font-family: var(--mono);
-      font-size: 42px;
-      font-weight: 600;
-      line-height: 1;
-      letter-spacing: -0.02em;
-      transition: color 0.4s;
-    }
-    .rate-value.good { color: var(--green); }
-    .rate-value.bad  { color: var(--red); }
-    .rate-bar-track {
-      height: 3px;
-      background: var(--bg3);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-    .rate-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.6s ease, background-color 0.4s;
-    }
-    .rate-bar-fill.good { background: var(--green); }
-    .rate-bar-fill.bad  { background: var(--red); }
-    .rate-sub {
-      font-size: 11px;
-      color: var(--text3);
-      margin-top: 2px;
-    }
+      /* Agreement rate big display */
+      .rate-display {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .rate-value {
+        font-family: var(--mono);
+        font-size: 42px;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        transition: color 0.4s;
+      }
+      .rate-value.good {
+        color: var(--green);
+      }
+      .rate-value.bad {
+        color: var(--red);
+      }
+      .rate-bar-track {
+        height: 3px;
+        background: var(--bg3);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+      .rate-bar-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition:
+          width 0.6s ease,
+          background-color 0.4s;
+      }
+      .rate-bar-fill.good {
+        background: var(--green);
+      }
+      .rate-bar-fill.bad {
+        background: var(--red);
+      }
+      .rate-sub {
+        font-size: 11px;
+        color: var(--text3);
+        margin-top: 2px;
+      }
 
-    /* stat rows */
-    .stat-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border2);
-    }
-    .stat-row:last-child { border-bottom: none; }
-    .stat-key {
-      font-size: 11px;
-      color: var(--text2);
-    }
-    .stat-val {
-      font-family: var(--mono);
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
-    }
+      /* stat rows */
+      .stat-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--border2);
+      }
+      .stat-row:last-child {
+        border-bottom: none;
+      }
+      .stat-key {
+        font-size: 11px;
+        color: var(--text2);
+      }
+      .stat-val {
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+      }
 
-    /* model status */
-    .model-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      width: 100%;
-      margin-bottom: 6px;
-    }
-    .model-badge.stable   { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,0.2); }
-    .model-badge.unstable { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(241,96,96,0.2); }
-    .model-badge.neutral  { background: var(--bg3);       color: var(--text2); border: 1px solid var(--border); }
-    .model-badge-dot {
-      width: 5px; height: 5px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .stable  .model-badge-dot { background: var(--green); }
-    .unstable .model-badge-dot { background: var(--red); }
-    .neutral  .model-badge-dot { background: var(--text3); }
+      /* model status */
+      .model-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        width: 100%;
+        margin-bottom: 6px;
+      }
+      .model-badge.stable {
+        background: var(--green-dim);
+        color: var(--green);
+        border: 1px solid rgba(62, 207, 142, 0.2);
+      }
+      .model-badge.unstable {
+        background: var(--red-dim);
+        color: var(--red);
+        border: 1px solid rgba(241, 96, 96, 0.2);
+      }
+      .model-badge.neutral {
+        background: var(--bg3);
+        color: var(--text2);
+        border: 1px solid var(--border);
+      }
+      .model-badge-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .stable .model-badge-dot {
+        background: var(--green);
+      }
+      .unstable .model-badge-dot {
+        background: var(--red);
+      }
+      .neutral .model-badge-dot {
+        background: var(--text3);
+      }
 
-    /* diagnosis in sidebar */
-    .diag-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; flex: 1; padding-bottom: 4px; }
-    .diag-list::-webkit-scrollbar { width: 3px; }
-    .diag-list::-webkit-scrollbar-track { background: transparent; }
-    .diag-list::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+      /* diagnosis in sidebar */
+      .diag-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+        flex: 1;
+        padding-bottom: 4px;
+      }
+      .diag-list::-webkit-scrollbar {
+        width: 3px;
+      }
+      .diag-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .diag-list::-webkit-scrollbar-thumb {
+        background: var(--bg3);
+        border-radius: 2px;
+      }
 
-    .diag-item {
-      padding: 10px 12px;
-      border-radius: 6px;
-      border-left: 2px solid;
-      background: var(--bg2);
-    }
-    .diag-item.critical { border-color: var(--red); }
-    .diag-item.warning  { border-color: var(--amber); }
-    .diag-item.ok       { border-color: var(--green); }
+      .diag-item {
+        padding: 10px 12px;
+        border-radius: 6px;
+        border-left: 2px solid;
+        background: var(--bg2);
+      }
+      .diag-item.critical {
+        border-color: var(--red);
+      }
+      .diag-item.warning {
+        border-color: var(--amber);
+      }
+      .diag-item.ok {
+        border-color: var(--green);
+      }
 
-    .diag-item-header {
-      display: flex; align-items: center; gap: 7px;
-      margin-bottom: 5px;
-    }
-    .diag-chip {
-      font-family: var(--mono);
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      padding: 1px 6px;
-      border-radius: 3px;
-      text-transform: uppercase;
-    }
-    .diag-chip.critical { background: var(--red-dim);   color: var(--red); }
-    .diag-chip.warning  { background: var(--amber-dim); color: var(--amber); }
-    .diag-chip.ok       { background: var(--green-dim); color: var(--green); }
+      .diag-item-header {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 5px;
+      }
+      .diag-chip {
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        padding: 1px 6px;
+        border-radius: 3px;
+        text-transform: uppercase;
+      }
+      .diag-chip.critical {
+        background: var(--red-dim);
+        color: var(--red);
+      }
+      .diag-chip.warning {
+        background: var(--amber-dim);
+        color: var(--amber);
+      }
+      .diag-chip.ok {
+        background: var(--green-dim);
+        color: var(--green);
+      }
 
-    .diag-item-title {
-      font-size: 11px; font-weight: 500; color: var(--text);
-    }
-    .diag-item-detail {
-      font-size: 11px; color: var(--text2); line-height: 1.6;
-    }
+      .diag-item-title {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text);
+      }
+      .diag-item-detail {
+        font-size: 11px;
+        color: var(--text2);
+        line-height: 1.6;
+      }
 
-    .diag-rec {
-      margin-top: 8px;
-      padding: 10px 12px;
-      border-radius: 6px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--text2);
-      line-height: 1.65;
-      flex-shrink: 0;
-    }
-    .diag-rec-label {
-      font-family: var(--mono);
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 5px;
-    }
+      .diag-rec {
+        margin-top: 8px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        font-size: 11px;
+        color: var(--text2);
+        line-height: 1.65;
+        flex-shrink: 0;
+      }
+      .diag-rec-label {
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text3);
+        margin-bottom: 5px;
+      }
 
-    /* ── RIGHT PANEL ────────────────────────────────────── */
-    #right-panel {
-      display: grid;
-      grid-template-rows: 1fr 1fr;
-      gap: 0;
-      overflow: hidden;
-      background: var(--bg);
-    }
+      /* ── RIGHT PANEL ────────────────────────────────────── */
+      #right-panel {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 0;
+        overflow: hidden;
+        background: var(--bg);
+      }
 
-    /* chart area */
-    #chart-area {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 0;
-    }
+      /* chart area */
+      #chart-area {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
 
-    .panel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 12px;
-      flex-shrink: 0;
-    }
-    .panel-title {
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text3);
-    }
-    .panel-meta {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-    }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+      }
+      .panel-title {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text3);
+      }
+      .panel-meta {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+      }
 
-    .chart-container {
-      flex: 1;
-      position: relative;
-      min-height: 0;
-    }
+      .chart-container {
+        flex: 1;
+        position: relative;
+        min-height: 0;
+      }
 
-    /* table area */
-    #table-area {
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 0;
-    }
+      /* table area */
+      #table-area {
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+      }
 
-    .table-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 20px 10px;
-      flex-shrink: 0;
-      border-bottom: 1px solid var(--border);
-    }
+      .table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px 10px;
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--border);
+      }
 
-    .table-scroll {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      min-height: 0;
-    }
-    .table-scroll::-webkit-scrollbar { width: 3px; }
-    .table-scroll::-webkit-scrollbar-track { background: transparent; }
-    .table-scroll::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+      .table-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
+      }
+      .table-scroll::-webkit-scrollbar {
+        width: 3px;
+      }
+      .table-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .table-scroll::-webkit-scrollbar-thumb {
+        background: var(--bg3);
+        border-radius: 2px;
+      }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    thead {
-      position: sticky; top: 0;
-      background: var(--bg);
-      z-index: 2;
-    }
-    thead th {
-      padding: 8px 20px;
-      text-align: left;
-      font-family: var(--mono);
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text3);
-      border-bottom: 1px solid var(--border);
-    }
-    tbody tr {
-      border-bottom: 1px solid var(--border2);
-      transition: background 0.1s;
-    }
-    tbody tr:hover { background: var(--bg2); }
-    tbody td {
-      padding: 9px 20px;
-      vertical-align: middle;
-    }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead {
+        position: sticky;
+        top: 0;
+        background: var(--bg);
+        z-index: 2;
+      }
+      thead th {
+        padding: 8px 20px;
+        text-align: left;
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text3);
+        border-bottom: 1px solid var(--border);
+      }
+      tbody tr {
+        border-bottom: 1px solid var(--border2);
+        transition: background 0.1s;
+      }
+      tbody tr:hover {
+        background: var(--bg2);
+      }
+      tbody td {
+        padding: 9px 20px;
+        vertical-align: middle;
+      }
 
-    .td-time {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text3);
-      white-space: nowrap;
-      width: 80px;
-    }
-    .td-input {
-      font-size: 12px;
-      color: var(--text);
-      max-width: 280px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .td-label {
-      display: flex; align-items: center; gap: 6px;
-      white-space: nowrap;
-    }
+      .td-time {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text3);
+        white-space: nowrap;
+        width: 80px;
+      }
+      .td-input {
+        font-size: 12px;
+        color: var(--text);
+        max-width: 280px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .td-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
 
-    .tag {
-      display: inline-flex; align-items: center;
-      padding: 1px 7px;
-      border-radius: 4px;
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 500;
-    }
-    .tag.pos { background: var(--green-dim); color: var(--green); }
-    .tag.neg { background: var(--red-dim);   color: var(--red); }
-    .tag.neu { background: var(--bg3);        color: var(--text2); }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 500;
+      }
+      .tag.pos {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .tag.neg {
+        background: var(--red-dim);
+        color: var(--red);
+      }
+      .tag.neu {
+        background: var(--bg3);
+        color: var(--text2);
+      }
 
-    .conf {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-    }
+      .conf {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text3);
+      }
 
-    .result-tag {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 1px 7px;
-      border-radius: 4px;
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 600;
-    }
-    .result-tag.agree    { background: var(--green-dim); color: var(--green); }
-    .result-tag.differ   { background: var(--red-dim);   color: var(--red); }
-    .result-tag.critical { background: var(--red-dim); color: var(--red); border: 1px solid rgba(241,96,96,0.3); }
+      .result-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+      }
+      .result-tag.agree {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .result-tag.differ {
+        background: var(--red-dim);
+        color: var(--red);
+      }
+      .result-tag.critical {
+        background: var(--red-dim);
+        color: var(--red);
+        border: 1px solid rgba(241, 96, 96, 0.3);
+      }
 
-    .empty-state {
-      padding: 32px 20px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--text3);
-      font-family: var(--mono);
-    }
+      .empty-state {
+        padding: 32px 20px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--text3);
+        font-family: var(--mono);
+      }
 
-    /* alert banner */
-    #alert-banner {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 0 20px;
-      height: 32px;
-      font-size: 11px;
-      font-weight: 500;
-      flex-shrink: 0;
-    }
-    #alert-banner.show { display: flex; }
-    #alert-banner.danger { background: rgba(241,96,96,0.08); border-bottom: 1px solid rgba(241,96,96,0.15); color: var(--red); }
-    #alert-banner.success { background: rgba(62,207,142,0.06); border-bottom: 1px solid rgba(62,207,142,0.12); color: var(--green); }
-    #alert-banner.info { background: rgba(79,143,255,0.06); border-bottom: 1px solid rgba(79,143,255,0.12); color: var(--accent); }
+      /* alert banner */
+      #alert-banner {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 0 20px;
+        height: 32px;
+        font-size: 11px;
+        font-weight: 500;
+        flex-shrink: 0;
+      }
+      #alert-banner.show {
+        display: flex;
+      }
+      #alert-banner.danger {
+        background: rgba(241, 96, 96, 0.08);
+        border-bottom: 1px solid rgba(241, 96, 96, 0.15);
+        color: var(--red);
+      }
+      #alert-banner.success {
+        background: rgba(62, 207, 142, 0.06);
+        border-bottom: 1px solid rgba(62, 207, 142, 0.12);
+        color: var(--green);
+      }
+      #alert-banner.info {
+        background: rgba(79, 143, 255, 0.06);
+        border-bottom: 1px solid rgba(79, 143, 255, 0.12);
+        color: var(--accent);
+      }
 
-    #right-panel-inner {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      height: 100%;
-    }
-  </style>
-</head>
-<body>
-<div id="root">
-
-  <!-- TOPBAR -->
-  <div id="topbar">
-    <div class="topbar-left">
-      <div class="wordmark">
-        <div class="wordmark-icon">⬡</div>
-        Shadow <span>Sentinel</span>
+      #right-panel-inner {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- TOPBAR -->
+      <div id="topbar">
+        <div class="topbar-left">
+          <div class="wordmark">
+            <div class="wordmark-icon">⬡</div>
+            Shadow <span>Sentinel</span>
+          </div>
+          <div class="divider-v"></div>
+          <div class="pill pill-live">
+            <div class="dot"></div>
+            LIVE
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span id="last-updated">—</span>
+          <a class="api-link" href="/docs" target="_blank">API DOCS ↗</a>
+        </div>
       </div>
-      <div class="divider-v"></div>
-      <div class="pill pill-live"><div class="dot"></div>LIVE</div>
+
+      <!-- MAIN -->
+      <div id="main">
+        <!-- SIDEBAR -->
+        <div id="sidebar">
+          <!-- Agreement Rate -->
+          <div class="sidebar-section">
+            <div class="section-label">Agreement Rate</div>
+            <div class="rate-display">
+              <div class="rate-value" id="rate-value">—</div>
+              <div class="rate-bar-track">
+                <div
+                  class="rate-bar-fill"
+                  id="rate-bar"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <div class="rate-sub">last 100 predictions</div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="sidebar-section">
+            <div class="section-label">Statistics</div>
+            <div class="stat-row">
+              <span class="stat-key">Total predictions</span>
+              <span class="stat-val" id="stat-total">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-key">Disagreements</span>
+              <span class="stat-val" id="stat-disagree">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-key">Conf. gap (avg)</span>
+              <span class="stat-val" id="stat-conf-gap">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-key">Critical conflicts</span>
+              <span class="stat-val" id="stat-critical">—</span>
+            </div>
+          </div>
+
+          <!-- Model Status -->
+          <div class="sidebar-section">
+            <div class="section-label">Model Status</div>
+            <div class="model-badge neutral" id="model-a-badge">
+              <div class="model-badge-dot"></div>
+              MODEL A · PRODUCTION
+            </div>
+            <div class="model-badge neutral" id="model-b-badge">
+              <div class="model-badge-dot"></div>
+              MODEL B · CHALLENGER
+            </div>
+          </div>
+
+          <!-- Diagnosis -->
+          <div class="sidebar-section">
+            <div class="section-label">Diagnosis</div>
+            <div class="diag-list" id="diag-list">
+              <div
+                class="empty-state"
+                style="padding: 8px 0; text-align: left; font-size: 11px"
+              >
+                Waiting for data...
+              </div>
+            </div>
+            <div class="diag-rec" id="diag-rec" style="display: none">
+              <div class="diag-rec-label">Recommendation</div>
+              <div id="diag-rec-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div id="right-panel-inner">
+          <!-- Alert Banner -->
+          <div id="alert-banner"></div>
+
+          <!-- Right split -->
+          <div id="right-panel">
+            <!-- Chart -->
+            <div id="chart-area">
+              <div class="panel-header">
+                <span class="panel-title"
+                  >Agreement Rate · Rolling Average</span
+                >
+                <span class="panel-meta" id="chart-meta">—</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart"></canvas>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div id="table-area">
+              <div class="table-header">
+                <span class="panel-title">Recent Predictions</span>
+                <span class="panel-meta" id="table-meta">—</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Input</th>
+                      <th>Model A</th>
+                      <th>Model B</th>
+                      <th>Result</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body">
+                    <tr>
+                      <td colspan="5" class="empty-state">
+                        No predictions yet
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="topbar-right">
-      <span id="last-updated">—</span>
-      <a class="api-link" href="/docs" target="_blank">API DOCS ↗</a>
-    </div>
-  </div>
 
-  <!-- MAIN -->
-  <div id="main">
+    <script>
+      let chart = null;
 
-    <!-- SIDEBAR -->
-    <div id="sidebar">
+      function tagClass(label) {
+        return label === "positive"
+          ? "pos"
+          : label === "negative"
+            ? "neg"
+            : "neu";
+      }
 
-      <!-- Agreement Rate -->
-      <div class="sidebar-section">
-        <div class="section-label">Agreement Rate</div>
-        <div class="rate-display">
-          <div class="rate-value" id="rate-value">—</div>
-          <div class="rate-bar-track">
-            <div class="rate-bar-fill" id="rate-bar" style="width:0%"></div>
-          </div>
-          <div class="rate-sub">last 100 predictions</div>
-        </div>
-      </div>
+      function resultTag(row) {
+        if (row.agreed) return `<span class="result-tag agree">✓ agree</span>`;
+        const crit = row.model_a_score > 0.8 && row.model_b_score > 0.8;
+        if (crit) return `<span class="result-tag critical">⚡ critical</span>`;
+        return `<span class="result-tag differ">✗ differ</span>`;
+      }
 
-      <!-- Stats -->
-      <div class="sidebar-section">
-        <div class="section-label">Statistics</div>
-        <div class="stat-row">
-          <span class="stat-key">Total predictions</span>
-          <span class="stat-val" id="stat-total">—</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-key">Disagreements</span>
-          <span class="stat-val" id="stat-disagree">—</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-key">Conf. gap (avg)</span>
-          <span class="stat-val" id="stat-conf-gap">—</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-key">Critical conflicts</span>
-          <span class="stat-val" id="stat-critical">—</span>
-        </div>
-      </div>
-
-      <!-- Model Status -->
-      <div class="sidebar-section">
-        <div class="section-label">Model Status</div>
-        <div class="model-badge neutral" id="model-a-badge">
-          <div class="model-badge-dot"></div>
-          MODEL A · PRODUCTION
-        </div>
-        <div class="model-badge neutral" id="model-b-badge">
-          <div class="model-badge-dot"></div>
-          MODEL B · CHALLENGER
-        </div>
-      </div>
-
-      <!-- Diagnosis -->
-      <div class="sidebar-section">
-        <div class="section-label">Diagnosis</div>
-        <div class="diag-list" id="diag-list">
-          <div class="empty-state" style="padding:8px 0;text-align:left;font-size:11px">Waiting for data...</div>
-        </div>
-        <div class="diag-rec" id="diag-rec" style="display:none">
-          <div class="diag-rec-label">Recommendation</div>
-          <div id="diag-rec-text"></div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- RIGHT PANEL -->
-    <div id="right-panel-inner">
-
-      <!-- Alert Banner -->
-      <div id="alert-banner"></div>
-
-      <!-- Right split -->
-      <div id="right-panel">
-
-        <!-- Chart -->
-        <div id="chart-area">
-          <div class="panel-header">
-            <span class="panel-title">Agreement Rate · Rolling Average</span>
-            <span class="panel-meta" id="chart-meta">—</span>
-          </div>
-          <div class="chart-container">
-            <canvas id="chart"></canvas>
-          </div>
-        </div>
-
-        <!-- Table -->
-        <div id="table-area">
-          <div class="table-header">
-            <span class="panel-title">Recent Predictions</span>
-            <span class="panel-meta" id="table-meta">—</span>
-          </div>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Input</th>
-                  <th>Model A</th>
-                  <th>Model B</th>
-                  <th>Result</th>
-                </tr>
-              </thead>
-              <tbody id="table-body">
-                <tr><td colspan="5" class="empty-state">No predictions yet</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-let chart = null;
-
-function tagClass(label) {
-  return label === 'positive' ? 'pos' : label === 'negative' ? 'neg' : 'neu';
-}
-
-function resultTag(row) {
-  if (row.agreed) return `<span class="result-tag agree">✓ agree</span>`;
-  const crit = row.model_a_score > 0.8 && row.model_b_score > 0.8;
-  if (crit) return `<span class="result-tag critical">⚡ critical</span>`;
-  return `<span class="result-tag differ">✗ differ</span>`;
-}
-
-function renderTable(rows) {
-  const tbody = document.getElementById('table-body');
-  const meta  = document.getElementById('table-meta');
-  if (!rows || rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No predictions yet — send requests to POST /predict</td></tr>`;
-    meta.textContent = '0 rows';
-    return;
-  }
-  meta.textContent = `${rows.length} rows`;
-  tbody.innerHTML = rows.map(r => {
-    const time = r.timestamp ? r.timestamp.split(' ')[1].slice(0,8) : '—';
-    return `<tr>
+      function renderTable(rows) {
+        const tbody = document.getElementById("table-body");
+        const meta = document.getElementById("table-meta");
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No predictions yet — send requests to POST /predict</td></tr>`;
+          meta.textContent = "0 rows";
+          return;
+        }
+        meta.textContent = `${rows.length} rows`;
+        tbody.innerHTML = rows
+          .map((r) => {
+            const time = r.timestamp
+              ? new Date(r.timestamp).toLocaleTimeString("en-GB", {
+                  hour12: false,
+                })
+              : "—";
+            return `<tr>
       <td class="td-time">${time}</td>
       <td class="td-input" title="${r.input_text}">${r.input_text}</td>
       <td>
         <div class="td-label">
           <span class="tag ${tagClass(r.model_a_label)}">${r.model_a_label}</span>
-          <span class="conf">${(r.model_a_score*100).toFixed(0)}%</span>
+          <span class="conf">${(r.model_a_score * 100).toFixed(0)}%</span>
         </div>
       </td>
       <td>
         <div class="td-label">
           <span class="tag ${tagClass(r.model_b_label)}">${r.model_b_label}</span>
-          <span class="conf">${(r.model_b_score*100).toFixed(0)}%</span>
+          <span class="conf">${(r.model_b_score * 100).toFixed(0)}%</span>
         </div>
       </td>
       <td>${resultTag(r)}</td>
     </tr>`;
-  }).join('');
-}
+          })
+          .join("");
+      }
 
-function renderDiagnosis(diag) {
-  const list   = document.getElementById('diag-list');
-  const rec    = document.getElementById('diag-rec');
-  const recTxt = document.getElementById('diag-rec-text');
+      function renderDiagnosis(diag) {
+        const list = document.getElementById("diag-list");
+        const rec = document.getElementById("diag-rec");
+        const recTxt = document.getElementById("diag-rec-text");
 
-  if (!diag || diag.issues.length === 0) {
-    list.innerHTML = `<div class="diag-item ok">
+        if (!diag || diag.issues.length === 0) {
+          list.innerHTML = `<div class="diag-item ok">
       <div class="diag-item-header">
         <span class="diag-chip ok">OK</span>
         <span class="diag-item-title">No issues detected</span>
       </div>
       <div class="diag-item-detail">Both models are in full agreement.</div>
     </div>`;
-    rec.style.display = 'none';
-    return;
-  }
+          rec.style.display = "none";
+          return;
+        }
 
-  list.innerHTML = diag.issues.map(issue => `
+        list.innerHTML = diag.issues
+          .map(
+            (issue) => `
     <div class="diag-item ${issue.severity}">
       <div class="diag-item-header">
         <span class="diag-chip ${issue.severity}">${issue.severity}</span>
@@ -698,163 +882,181 @@ function renderDiagnosis(diag) {
       </div>
       <div class="diag-item-detail">${issue.detail}</div>
     </div>
-  `).join('');
+  `,
+          )
+          .join("");
 
-  recTxt.textContent = diag.recommendation;
-  rec.style.display = 'block';
-}
+        recTxt.textContent = diag.recommendation;
+        rec.style.display = "block";
+      }
 
-function renderChart(data) {
-  const labels = data.map(d => d.index);
-  const values = data.map(d => d.value);
-  const meta   = document.getElementById('chart-meta');
-  meta.textContent = `${data.length} data points`;
+      function renderChart(data) {
+        const labels = data.map((d) => d.index);
+        const values = data.map((d) => d.value);
+        const meta = document.getElementById("chart-meta");
+        meta.textContent = `${data.length} data points`;
 
-  if (chart) {
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = values;
-    chart.data.datasets[1].data = labels.map(() => 80);
-    chart.update('none');
-    return;
-  }
-
-  const ctx = document.getElementById('chart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          data: values,
-          borderColor: '#4f8fff',
-          backgroundColor: 'rgba(79,143,255,0.06)',
-          borderWidth: 1.5,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 2.5,
-          pointBackgroundColor: '#4f8fff',
-          pointBorderColor: '#080b10',
-          pointBorderWidth: 1,
-          pointHoverRadius: 4,
-        },
-        {
-          data: labels.map(() => 80),
-          borderColor: 'rgba(241,96,96,0.4)',
-          borderWidth: 1,
-          borderDash: [5, 4],
-          pointRadius: 0,
-          fill: false,
+        if (chart) {
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = values;
+          chart.data.datasets[1].data = labels.map(() => 80);
+          chart.update("none");
+          return;
         }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        y: {
-          min: 0, max: 100,
-          grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: {
-            color: '#4e5a6a',
-            callback: v => v + '%',
-            font: { family: "'IBM Plex Mono'", size: 10 }
+
+        const ctx = document.getElementById("chart").getContext("2d");
+        chart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                data: values,
+                borderColor: "#4f8fff",
+                backgroundColor: "rgba(79,143,255,0.06)",
+                borderWidth: 1.5,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 2.5,
+                pointBackgroundColor: "#4f8fff",
+                pointBorderColor: "#080b10",
+                pointBorderWidth: 1,
+                pointHoverRadius: 4,
+              },
+              {
+                data: labels.map(() => 80),
+                borderColor: "rgba(241,96,96,0.4)",
+                borderWidth: 1,
+                borderDash: [5, 4],
+                pointRadius: 0,
+                fill: false,
+              },
+            ],
           },
-          border: { display: false }
-        },
-        x: {
-          grid: { display: false },
-          ticks: {
-            color: '#4e5a6a',
-            font: { family: "'IBM Plex Mono'", size: 10 },
-            maxTicksLimit: 12
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            scales: {
+              y: {
+                min: 0,
+                max: 100,
+                grid: { color: "rgba(255,255,255,0.04)" },
+                ticks: {
+                  color: "#4e5a6a",
+                  callback: (v) => v + "%",
+                  font: { family: "'IBM Plex Mono'", size: 10 },
+                },
+                border: { display: false },
+              },
+              x: {
+                grid: { display: false },
+                ticks: {
+                  color: "#4e5a6a",
+                  font: { family: "'IBM Plex Mono'", size: 10 },
+                  maxTicksLimit: 12,
+                },
+                border: { display: false },
+              },
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#111520",
+                borderColor: "rgba(255,255,255,0.07)",
+                borderWidth: 1,
+                titleColor: "#dce4f0",
+                bodyColor: "#8a95a8",
+                titleFont: { family: "'IBM Plex Mono'", size: 11 },
+                bodyFont: { family: "'IBM Plex Mono'", size: 10 },
+                padding: 10,
+                callbacks: {
+                  title: (items) => `Prediction #${items[0].label}`,
+                  label: (ctx) =>
+                    ctx.datasetIndex === 0
+                      ? `  rate: ${ctx.parsed.y.toFixed(1)}%`
+                      : `  threshold: 80%`,
+                },
+              },
+            },
           },
-          border: { display: false }
+        });
+      }
+
+      function update(data) {
+        const rate = data.agreement_rate;
+        const good = rate >= 80;
+
+        // Rate display
+        const rv = document.getElementById("rate-value");
+        const rb = document.getElementById("rate-bar");
+        rv.textContent = rate + "%";
+        rv.className = "rate-value " + (good ? "good" : "bad");
+        rb.style.width = rate + "%";
+        rb.className = "rate-bar-fill " + (good ? "good" : "bad");
+
+        // Stats
+        document.getElementById("stat-total").textContent = data.total;
+        document.getElementById("stat-disagree").textContent =
+          data.disagreements;
+        document.getElementById("stat-conf-gap").textContent = data.diagnosis
+          ?.avg_confidence_gap
+          ? data.diagnosis.avg_confidence_gap + "%"
+          : "—";
+        document.getElementById("stat-critical").textContent =
+          data.diagnosis?.high_conf_conflicts ?? "—";
+
+        // Model badges
+        const aB = document.getElementById("model-a-badge");
+        const bB = document.getElementById("model-b-badge");
+        aB.className = "model-badge stable";
+        aB.innerHTML = `<div class="model-badge-dot"></div>MODEL A · PRODUCTION`;
+
+        const hasCritical =
+          data.diagnosis && data.diagnosis.high_conf_conflicts > 0;
+        const bStatus = !good || hasCritical ? "unstable" : "stable";
+        const bLabel = !good || hasCritical ? "UNSTABLE" : "PROMOTABLE";
+        bB.className = "model-badge " + bStatus;
+        bB.innerHTML = `<div class="model-badge-dot"></div>MODEL B · ${bLabel}`;
+
+        // Alert banner
+        const banner = document.getElementById("alert-banner");
+        if (data.total === 0) {
+          banner.className = "show info";
+          banner.textContent =
+            "No predictions yet — send requests to POST /predict to begin monitoring.";
+        } else if (!good) {
+          banner.className = "show danger";
+          banner.innerHTML = `⚠ Divergence alert — agreement at ${rate}%. See diagnosis panel for root cause.`;
+        } else if (hasCritical) {
+          banner.className = "show danger";
+          banner.innerHTML = `⚠ Agreement at <strong>${rate}%</strong> but critical conflicts detected. Do not promote Model B yet.`;
+        } else {
+          banner.className = "show success";
+          banner.innerHTML = `✓ Models stable — <strong>${rate}%</strong> agreement. Model B is eligible for promotion.`;
         }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#111520',
-          borderColor: 'rgba(255,255,255,0.07)',
-          borderWidth: 1,
-          titleColor: '#dce4f0',
-          bodyColor: '#8a95a8',
-          titleFont: { family: "'IBM Plex Mono'", size: 11 },
-          bodyFont: { family: "'IBM Plex Mono'", size: 10 },
-          padding: 10,
-          callbacks: {
-            title: items => `Prediction #${items[0].label}`,
-            label: ctx => ctx.datasetIndex === 0
-              ? `  rate: ${ctx.parsed.y.toFixed(1)}%`
-              : `  threshold: 80%`
-          }
+
+        // Last updated
+        document.getElementById("last-updated").textContent =
+          new Date().toLocaleTimeString("en-GB", { hour12: false });
+
+        renderChart(data.chart_data);
+        renderDiagnosis(data.diagnosis);
+        renderTable(data.recent);
+      }
+
+      async function poll() {
+        try {
+          const res = await fetch("/stats");
+          if (!res.ok) throw new Error();
+          update(await res.json());
+        } catch {
+          document.getElementById("last-updated").textContent = "ERR";
         }
       }
-    }
-  });
-}
 
-function update(data) {
-  const rate = data.agreement_rate;
-  const good = rate >= 80;
-
-  // Rate display
-  const rv = document.getElementById('rate-value');
-  const rb = document.getElementById('rate-bar');
-  rv.textContent = rate + '%';
-  rv.className = 'rate-value ' + (good ? 'good' : 'bad');
-  rb.style.width = rate + '%';
-  rb.className = 'rate-bar-fill ' + (good ? 'good' : 'bad');
-
-  // Stats
-  document.getElementById('stat-total').textContent     = data.total;
-  document.getElementById('stat-disagree').textContent  = data.disagreements;
-  document.getElementById('stat-conf-gap').textContent  = data.diagnosis?.avg_confidence_gap ? data.diagnosis.avg_confidence_gap + '%' : '—';
-  document.getElementById('stat-critical').textContent  = data.diagnosis?.high_conf_conflicts ?? '—';
-
-  // Model badges
-  const aB = document.getElementById('model-a-badge');
-  const bB = document.getElementById('model-b-badge');
-  aB.className = 'model-badge stable';
-  aB.innerHTML = `<div class="model-badge-dot"></div>MODEL A · PRODUCTION`;
-  bB.className = 'model-badge ' + (good ? 'stable' : 'unstable');
-  bB.innerHTML = `<div class="model-badge-dot"></div>MODEL B · ${good ? 'PROMOTABLE' : 'UNSTABLE'}`;
-
-  // Alert banner
-  const banner = document.getElementById('alert-banner');
-  if (data.total === 0) {
-    banner.className = 'show info';
-    banner.textContent = 'No predictions yet — send requests to POST /predict to begin monitoring.';
-  } else if (!good) {
-    banner.className = 'show danger';
-    banner.innerHTML = `⚠ Divergence alert — agreement at ${rate}%. See diagnosis panel for root cause.`;
-  } else {
-    banner.className = 'show success';
-    banner.innerHTML = `✓ Models stable — ${rate}% agreement. Model B is eligible for promotion.`;
-  }
-
-  // Last updated
-  document.getElementById('last-updated').textContent =
-    new Date().toLocaleTimeString('en-GB', { hour12: false });
-
-  renderChart(data.chart_data);
-  renderDiagnosis(data.diagnosis);
-  renderTable(data.recent);
-}
-
-async function poll() {
-  try {
-    const res = await fetch('/stats');
-    if (!res.ok) throw new Error();
-    update(await res.json());
-  } catch {
-    document.getElementById('last-updated').textContent = 'ERR';
-  }
-}
-
-poll();
-setInterval(poll, 5000);
-</script>
-</body>
+      poll();
+      setInterval(poll, 5000);
+    </script>
+  </body>
 </html>
