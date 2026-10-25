@@ -2,13 +2,11 @@
 
 A production-grade MLOps system for shadow deployment monitoring. Run a challenger model silently alongside production, detect divergence in real time, diagnose root causes automatically, and gate promotion through a CI/CD pipeline.
 
-**Live demo:** https://shadow-sentinel-1092599030143.europe-west2.run.app
-
 ---
 
 ## The Problem
 
-Most teams focus on building models. Very few focus on what happens after deployment. A model can perform well in training but silently degrade in production due to data drift, distribution shift, or behavioural changes in users. By the time someone notices, the damage is done.
+A model can perform well in training but silently degrade in production due to data drift, distribution shift, or behavioural changes in users. By the time someone notices, the damage is done.
 
 Shadow Sentinel addresses this by running a challenger model in parallel with production, monitoring their agreement in real time, and making automated promotion or rollback decisions.
 
@@ -108,7 +106,7 @@ docker-compose up
 **Example request:**
 
 ```bash
-curl -X POST https://shadow-sentinel-1092599030143.europe-west2.run.app/predict \
+curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{"text": "This product is absolutely amazing"}'
 ```
@@ -197,11 +195,9 @@ shadow-sentinel/
 
 ## What I Learned
 
-Deploying ML models is the easy part. Keeping them reliable in production is the real engineering challenge.
-
 This project taught me that distribution shift, confidence calibration, and multi-instance storage are problems you only discover after deployment — which is exactly why shadow deployment and automated monitoring exist. The most interesting moment was discovering that SQLite breaks silently in Cloud Run when traffic routes to different container instances. That single failure pointed directly to why production systems use shared databases.
 
-The broader insight: the gap between a model that works in a notebook and a model that works reliably in production for 12 months is enormous. Most ML education stops at the notebook. This project starts where that stops.
+The broader takeaway: reliability problems surface after deployment, so monitoring and promotion gates need to be designed in from the start, not added later.
 
 ---
 
